@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SANKATMOCHAN — Intelligent Pre-Disaster Relocation & Decision Support System (Chamoli District Pilot)
+  </title>
+  <meta name="description"
+    content="SANKATMOCHAN: Intelligent Identification of Hazard-Based Red Zones, Carrying Capacity Assessment, and Immediate Relocation Needs for Vulnerable Habitations. SIH 2026 Problem Statement SIH26191 Prototype.">
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+    rel="stylesheet">
+
+  <!-- Leaflet GIS CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+  <!-- Modern light theme (styles.css ke baad load hota hai) -->
+  <link rel="stylesheet" href="theme-light.css">
+</head>
+
+<body>
+
+  <!-- ====================================================================
+       TOP BANNER: CORE PRODUCT MESSAGE & DEMO CONTROLS
+       ==================================================================== -->
+  <div class="top-simulation-banner">
+    <div class="banner-left-info">
+      <span class="sim-badge-alert">DEMO / SIMULATED SCENARIO</span>
+      <span class="banner-text">
+        <strong>SANKATMOCHAN:</strong> "Turns disaster warnings into coordinated action." &nbsp;•&nbsp; <span
+          style="opacity:0.9;">Plan → Alert → Relocate → Verify → Respond</span>
+      </span>
+    </div>
+    <div class="banner-right-controls">
+      <span class="banner-usp-quote">"We don't just identify risk — we coordinate who moves, where to go, and if they
+        reach safety in time."</span>
+      <button class="btn-demo-glow" onclick="runDemoScenario()" title="Run Rapid 30-Second Hackathon Judge Demo">
+        ⚡ RUN DEMO (30s)
+      </button>
+    </div>
+  </div>
+
+  <!-- Automated Demo HUD Overlay (30-Second Rapid Workflow) -->
+  <div class="demo-hud-overlay" id="demo-mode-hud">
+    <div class="demo-hud-card">
+      <div class="demo-hud-header">
+        <span class="pulse-red-dot"></span>
+        <strong style="color:#0f172a; font-size:14px;">Rapid 30-Second Hackathon Demo Stepper</strong>
+        <span class="demo-timer-badge" id="demo-hud-timer">0s / 33s</span>
+      </div>
+      <p id="demo-hud-text" class="demo-hud-detail">Initializing baseline multi-hazard scenario...</p>
+      <div class="demo-hud-footer">
+        <small style="color:#64748b;">Plan → Alert → Relocate → Verify → Respond</small>
+        <button class="btn-sm btn-secondary-white"
+          onclick="document.getElementById('demo-mode-hud').classList.remove('visible'); if(APP_STATE.demoMode.timer) clearInterval(APP_STATE.demoMode.timer); APP_STATE.demoMode.isRunning=false;">Stop
+          Demo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- System Toast Notification -->
+  <div id="system-toast" class="system-toast-box"></div>
+
+  <!-- ====================================================================
+       MASTER CONTAINER: AUTHORITY COMMAND CENTER SHELL
+       ==================================================================== -->
+  <div class="app-layout" id="authority-shell">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-top">
+
+        <!-- Brand Logo -->
+        <div class="brand-box" onclick="switchView('command-center')" style="cursor:pointer;">
+          <div class="brand-icon-shield">🛡️</div>
+          <div class="brand-text-block">
+            <h2>SANKATMOCHAN</h2>
+            <span> • SIH26191</span>
+          </div>
+        </div>
+
+        <!-- Pilot Location Selector Box -->
+        <div class="district-selector-card" title="Chamoli District Pilot">
+          <div class="district-info-left">
+            <span class="district-pin-icon">📍</span>
+            <div>
+              <div class="district-name">Chamoli District</div>
+              <div class="district-sub">Uttarakhand, India • Pilot Demo</div>
+            </div>
+          </div>
+          <span class="badge-status badge-blue" style="font-size:9px;">DEMO</span>
+        </div>
+
+        <!-- Section: WORKSPACE -->
+        <!-- Section 1: CORE OPERATIONS (Simplified 12-Item Sidebar) -->
+        <div class="nav-section">
+          <span class="nav-section-title">Core Operations</span>
+
+          <a class="nav-link active" href="#" data-view="command-center" onclick="switchView('command-center')">
+            <div class="nav-link-left">
+              <span class="nav-icon">⊞</span>
+              <span>Command Center</span>
+            </div>
+          </a>
+
+          <a class="nav-link" href="#" data-view="habitations" onclick="switchView('habitations')">
+            <div class="nav-link-left">
+              <span class="nav-icon">👥</span>
+              <span>Villages</span>
+            </div>
+            <span class="nav-badge-pill">8</span>
+          </a>
+
+          <a class="nav-link" href="#" data-view="red-zones" onclick="switchView('red-zones')">
+            <div class="nav-link-left">
+              <span class="nav-icon">⚠️</span>
+              <span>Red Zones</span>
+            </div>
+            <span class="nav-badge-pill red">ALERT</span>
+          </a>
+
+          <a class="nav-link" href="#" data-view="relocation" onclick="openGeneratePlanModal('VIL-01')">
+            <div class="nav-link-left">
+              <span class="nav-icon">🔀</span>
+              <span>Relocation</span>
+            </div>
+            <span class="nav-badge-pill blue">PLAN</span>
+          </a>
+
+          <a class="nav-link" href="#" data-view="safe-sites" onclick="switchView('safe-sites')">
+            <div class="nav-link-left">
+              <span class="nav-icon">⛺</span>
+              <span>Safe Sites</span>
+            </div>
+            <span class="nav-badge-pill">5</span>
+          </a>
+
+          <a class="nav-link" href="#" data-view="permanent-relocation" onclick="switchView('permanent-relocation')">
+            <div class="nav-link-left">
+              <span class="nav-icon">🏘️</span>
+              <span>Permanent Relocation</span>
+            </div>
+            <span class="nav-badge-pill green">NEW</span>
+          </a>
+
+          <a class="nav-link" href="#" data-view="routes" onclick="switchView('routes')">
+            <div class="nav-link-left">
+              <span class="nav-icon">🛣️</span>
+              <span>Routes</span>
+            </div>
+          </a>
+
+          <a class="nav-link" href="#" data-view="aerial-verification" onclick="switchView('aerial-verification')">
+            <div class="nav-link-left">
+              <span class="nav-icon">🛸</span>
+              <span>Aerial Verification</span>
+            </div>
+            <span class="nav-badge-pill blue">AI</span>
+          </a>
+        </div>
+
+        <!-- Section 2: RESPONSE & SCENARIO INTEL -->
+        <div class="nav-section">
+          <span class="nav-section-title">Response & Intel</span>
+
+          <a class="nav-link" href="#" data-view="ndrf" onclick="switchRole('ndrf')">
+            <div class="nav-link-left">
+              <span class="nav-icon">🚨</span>
+              <span>NDRF Response</span>
+            </div>
+            <span class="nav-badge-pill red">QRT</span>
+          </a>
+
+          <a class="nav-link" href="#" data-view="alerts" onclick="switchView('alerts')">
+            <div class="nav-link-left">
+              <span class="nav-icon">📢</span>
+              <span>Alerts</span>
+            </div>
+            <span class="nav-badge-pill red">LIVE</span>
+          </a>
+
+          <a class="nav-link" href="#" data-view="scenario-lab" onclick="switchView('scenario-lab')">
+            <div class="nav-link-left">
+              <span class="nav-icon">⚗️</span>
+              <span>Scenario Lab</span>
+            </div>
+            <span class="nav-badge-pill what-if">WHAT-IF</span>
+          </a>
+
+          <a class="nav-link" href="#" data-view="status" onclick="switchView('status')">
+            <div class="nav-link-left">
+              <span class="nav-icon">📊</span>
+              <span>Status</span>
+            </div>
+            <span class="nav-badge-pill green">PROGRESS</span>
+          </a>
+
+          <a class="nav-link" href="#" data-view="methodology" onclick="switchView('methodology')">
+            <div class="nav-link-left">
+              <span class="nav-icon">📚</span>
+              <span>Methodology</span>
+            </div>
+          </a>
+        </div>
+
+      </div>
+
+      <!-- Sidebar Bottom Role Switcher & User Footer (3 Clean Roles) -->
+      <div class="sidebar-bottom">
+        <div class="sidebar-role-card">
+          <div class="role-card-title">
+            <span>🛡️</span> 3-Role Prototype Switcher
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px; margin-top:8px;">
+            <button class="btn-sm btn-secondary-white" style="font-size:11px; text-align:left;"
+              onclick="switchRole('authority')">
+              🛡️ District Authority (DM)
+            </button>
+            <button class="btn-sm btn-secondary-white"
+              style="font-size:11px; text-align:left; color:#b91c1c; font-weight:700;" onclick="switchRole('ndrf')">
+              🚨 NDRF Response Team
+            </button>
+            <button class="btn-role-switch" style="font-size:11px; padding:6px 10px;" onclick="switchRole('resident')">
+              📱 Resident Mobile View
+            </button>
+          </div>
+        </div>
+
+        <div class="sidebar-user-footer">
+          <div class="user-left">
+            <div class="user-avatar-circle" id="sidebar-avatar-initials">DM</div>
+            <div>
+              <div class="user-name" id="sidebar-user-display">District Magistrate (DEOC)</div>
+              <div class="user-role" id="sidebar-role-display">Chamoli Response Command</div>
+            </div>
+          </div>
+          <button class="btn-icon-dim" title="Demo Login Settings" onclick="openLoginModal()">🔑</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT CANVAS -->
+    <main class="main-content">
+
+      <!-- Top Navigation & Utility Bar -->
+      <div class="top-nav-bar">
+        <div class="breadcrumbs">
+          Workspace &nbsp;›&nbsp; <span class="current" id="breadcrumb-current">Command Center</span>
+        </div>
+
+        <div class="top-nav-actions">
+          <!-- Network Status Indicator Button -->
+          <button class="btn-network-pill" id="network-status-btn" onclick="openNetworkStatusModal()"
+            title="Simulate Network Condition">
+            🟢 NETWORK NORMAL
+          </button>
+
+          <div class="planning-window-text">
+            <span>⏱</span> Window: <strong>18h Available / 11h Required</strong>
+          </div>
+
+          <!-- Role Indicator Badge -->
+          <div class="badge-role-header" id="top-role-badge">
+            DM Command Center
+          </div>
+
+          <!-- Send Alert Quick Action -->
+          <button class="btn-sm btn-secondary-white" onclick="openSendAlertModal()"
+            style="color:#b91c1c; font-weight:700;">
+            📢 SEND ALERT
+          </button>
+
+          <!-- Quick Role Switchers -->
+          <button class="btn-sm btn-secondary-white" onclick="switchRole('ndrf')">
+            🚨 NDRF View
+          </button>
+          <button class="btn-sm btn-secondary-white" onclick="switchRole('resident')">
+            📱 Resident
+          </button>
+
+          <!-- Run Demo Button -->
+          <button class="btn-sm btn-primary-blue" onclick="runDemoScenario()">
+            ⚡ RUN DEMO
+          </button>
+
+          <button class="icon-button" title="Data Source Attribution & Help"
+            onclick="switchView('methodology')">❔</button>
+        </div>
+      </div>
+
+      <!-- ==================================================================
+           VIEW 1: COMMAND CENTER (Default Main View)
+           ================================================================== -->
+      <div id="view-command-center" class="view-panel" style="display:block;">
+
+        <!-- Page Title & Primary Actions Row -->
+        <div class="page-title-row">
+          <div class="title-left">
+            <div class="title-icon-sq">
+              🛡️
+            </div>
+            <div class="title-text-wrap">
+              <h1>District Command Center</h1>
+              <p>Chamoli District, Uttarakhand • One district, eight habitations, one queue — turns disaster warnings
+                into coordinated relocation.</p>
+            </div>
+          </div>
+
+          <div class="title-actions-right">
+            <button class="btn-secondary-white" onclick="switchView('scenario-lab')">
+              <span>⚗️</span> Scenario Lab
+            </button>
+            <button class="btn-primary-blue" onclick="openGeneratePlanModal('VIL-01')">
+              ⚡ Generate Relocation Plan
+            </button>
+          </div>
+        </div>
+
+        <!-- 4-Stage Operational Relocation Pipeline Strip (Instant 5-Second Comprehension) -->
+        <div class="four-stage-overview-strip" onclick="switchView('status')"
+          title="Click to view live execution progress">
+          <div class="pipeline-step-node completed">
+            <span class="step-num">1</span>
+            <div>
+              <strong>HAZARD DETECTED ⚠️</strong>
+              <small>Raini Gaon (92% Risk)</small>
+            </div>
+          </div>
+          <span class="pipeline-arrow">→</span>
+          <div class="pipeline-step-node active">
+            <span class="step-num">2</span>
+            <div>
+              <strong>RELOCATION PLAN 📋</strong>
+              <small>1,850 People • Sites A & B</small>
+            </div>
+          </div>
+          <span class="pipeline-arrow">→</span>
+          <div class="pipeline-step-node">
+            <span class="step-num">3</span>
+            <div>
+              <strong>DM APPROVAL 🛡️</strong>
+              <small>District Magistrate sign-off</small>
+            </div>
+          </div>
+          <span class="pipeline-arrow">→</span>
+          <div class="pipeline-step-node">
+            <span class="step-num">4</span>
+            <div>
+              <strong>SAFE HAVEN ⛺</strong>
+              <small>Window: +7h buffer</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preparedness Exercise Notice Bar -->
+        <div class="preparedness-alert-bar">
+          <div class="alert-left-text">
+            <span>ℹ️</span>
+            <span><strong>DEMO / SIMULATED SCENARIO:</strong> Chamoli District Cloudburst & Flash Flood. Census 2011
+              baseline: 1,940 demo-adjusted to 2,400 planning capacity.</span>
+          </div>
+          <a class="alert-right-link" href="#" onclick="switchView('methodology')">
+            About Data & Methodology ↗
+          </a>
+        </div>
+
+        <!-- ==================================================================
+             TOP METRICS ROW (6 Cards: Red Zones, People, Capacity, Window, Routes, Live Weather)
+             ================================================================== -->
+        <section class="metrics-row">
+
+          <!-- Card 1: RED ZONE HABITATIONS -->
+          <div class="metric-card-white" style="border-left: 4px solid #dc2626; cursor:pointer;"
+            onclick="switchView('red-zones')">
+            <div class="metric-card-top">
+              <span class="metric-title">Red Zone Habitations</span>
+              <div class="metric-icon-sq red">⚠️</div>
+            </div>
+            <div class="metric-number-big text-red" id="metric-priority-habitations">1 / 8</div>
+            <div class="metric-subtext">Village A is Critical • 8 monitored</div>
+          </div>
+
+          <!-- Card 2: PEOPLE REQUIRING RELOCATION -->
+          <div class="metric-card-white" style="cursor:pointer;" onclick="openGeneratePlanModal('VIL-01')">
+            <div class="metric-card-top">
+              <span class="metric-title">People Requiring Relocation</span>
+              <div class="metric-icon-sq amber">👥</div>
+            </div>
+            <div class="metric-number-big" id="metric-need-review" style="color:#d97706;">1,850</div>
+            <div class="metric-subtext">Village A Priority #1 • 4,450 total exposed</div>
+          </div>
+
+          <!-- Card 3: SAFE CAPACITY -->
+          <div class="metric-card-white" style="cursor:pointer;" onclick="switchView('safe-sites')">
+            <div class="metric-card-top">
+              <span class="metric-title">Safe Capacity</span>
+              <div class="metric-icon-sq green">⛺</div>
+            </div>
+            <div class="metric-number-big text-green" id="metric-safe-capacity">4,650</div>
+            <div class="metric-subtext">5 designated operational shelters</div>
+          </div>
+
+          <!-- Card 4: RELOCATION WINDOW -->
+          <div class="metric-card-white" style="border-left: 4px solid #16a34a;">
+            <div class="metric-card-top">
+              <span class="metric-title">Relocation Window</span>
+              <div class="metric-icon-sq window">⏱️</div>
+            </div>
+            <div class="metric-number-big" id="hero-window-hours" style="color: #16a34a;">18h</div>
+            <div class="metric-subtext" id="hero-window-sub" style="color: #16a34a; font-weight:700;">
+              🟢 18h Available / 11h Required
+            </div>
+          </div>
+
+          <!-- Card 5: ROUTES AT RISK -->
+          <div class="metric-card-white" style="cursor:pointer;" onclick="switchView('routes')">
+            <div class="metric-card-top">
+              <span class="metric-title">Routes at Risk</span>
+              <div class="metric-icon-sq red">🛣️</div>
+            </div>
+            <div class="metric-number-big" id="metric-routes-risk" style="color:#ea580c;">2 / 5</div>
+            <div class="metric-subtext">R1 high flood risk; R2 open corridor</div>
+          </div>
+
+          <!-- Card 6: LIVE WEATHER (Open-Meteo API Integration) -->
+          <div class="metric-card-white" style="border-left: 4px solid #2563eb;" id="card-live-weather">
+            <div class="metric-card-top">
+              <span class="metric-title">Live Weather (Open-Meteo)</span>
+              <div class="metric-icon-sq blue">🌧️</div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+              <div class="metric-number-big text-blue" id="weather-temp-rain" style="font-size:20px;">17.6°C • 12.4mm
+              </div>
+              <span class="badge-status badge-red" id="weather-risk-badge" style="font-size:10px;">Risk: HIGH</span>
+            </div>
+            <div class="metric-subtext" id="weather-details-sub" style="color:#2563eb; font-weight:600;">
+              🌧 68% Rain • Wind: 18 km/h • Hum: 82%
+            </div>
+            <div style="font-size:9px; color:#94a3b8; margin-top:2px;" id="weather-source-sub">
+              Source: Open-Meteo • Updated: 10:24 AM
+            </div>
+          </div>
+
+        </section>
+
+        <!-- Weather Deterioration & Hourly Forecast Strip (Open-Meteo 24h) -->
+        <div class="weather-timeline-bar" id="weather-timeline-strip"
+          style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px 14px; margin-top:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:16px;">🌦️</span>
+            <div>
+              <strong style="font-size:12px; color:#0f172a;" id="weather-timeline-title">24-Hour Forecast Timeline —
+                Village A</strong>
+              <small style="display:block; font-size:10px; color:#64748b;">AI/Rule-based Weather Risk Signal — Decision
+                Support Only (Open-Meteo)</small>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:12px; font-size:11px;" id="weather-timeline-nodes">
+            <div style="text-align:center;"><strong>NOW</strong>
+              <div style="color:#2563eb;">12.4mm (68%)</div>
+            </div>
+            <span style="color:#cbd5e1;">→</span>
+            <div style="text-align:center;"><strong>+3h</strong>
+              <div style="color:#ea580c;">18.2mm (85%)</div>
+            </div>
+            <span style="color:#cbd5e1;">→</span>
+            <div style="text-align:center;"><strong>+6h</strong>
+              <div style="color:#dc2626; font-weight:700;">24.0mm (92%)</div>
+            </div>
+            <span style="color:#cbd5e1;">→</span>
+            <div style="text-align:center;"><strong>+12h</strong>
+              <div style="color:#64748b;">8.5mm (45%)</div>
+            </div>
+            <span style="color:#cbd5e1;">→</span>
+            <div style="text-align:center;"><strong>+24h</strong>
+              <div style="color:#16a34a;">2.0mm (20%)</div>
+            </div>
+          </div>
+
+          <div id="weather-deterioration-badge" class="badge-status badge-orange"
+            style="font-size:10px; font-weight:700;">
+            ⚠️ Weather deterioration detected — reassess relocation window
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             MIDDLE GRID: GIS MAP & RESPONSE PRIORITIES
+             ================================================================== -->
+        <section class="middle-grid">
+
+          <!-- District GIS Map Card -->
+          <div class="map-panel-card">
+            <div class="map-card-header">
+              <div class="map-title-left">
+                <span>🗺️</span>
+                <h3>Tactical GIS Relocation Map</h3>
+                <span class="map-hab-count">Chamoli District • 8 Villages • 5 Safe Sites</span>
+              </div>
+
+              <!-- Layer Toggles -->
+              <div class="map-layer-pills">
+                <button class="btn-layer-pill active" data-layer="villages">
+                  <span>🏘️</span> Villages
+                </button>
+                <button class="btn-layer-pill active" data-layer="redZones">
+                  <span>🌊</span> Red Zones
+                </button>
+                <button class="btn-layer-pill active" data-layer="safeSites">
+                  <span>⛺</span> Safe Sites
+                </button>
+                <button class="btn-layer-pill active" data-layer="routes">
+                  <span>🛣️</span> Routes
+                </button>
+              </div>
+            </div>
+
+            <!-- Leaflet Map Canvas -->
+            <div class="map-canvas-wrapper">
+              <div id="gis-map"></div>
+
+              <!-- Top Left Map Floating Tag -->
+              <div class="map-tag-top-left">
+                <span class="dot-green"></span>
+                <span>Chamoli Basin, Uttarakhand</span>
+                <span class="sim-label">DEMO SCENARIO</span>
+              </div>
+
+              <!-- Map Legend Bottom -->
+              <div class="map-legend-bottom">
+                <span style="color:#16a34a; font-weight:700;">• Open</span>
+                <span style="color:#ea580c; font-weight:700;">• At Risk</span>
+                <span style="color:#dc2626; font-weight:700;">• High Closure Risk</span>
+                <span style="color:#2563eb; font-weight:700;">━━ Recommended Route (R2)</span>
+                <span style="color:#9333ea; font-weight:700;">⛺ Safe Site</span>
+              </div>
+
+              <!-- Bottom Right Disclaimer -->
+              <div class="map-tag-bottom-right">
+                Simulated GIS telemetry • Leaflet & OpenStreetMap
+              </div>
+            </div>
+
+            <!-- Interactive Route Timeline Scrub Bar Below Map -->
+            <div class="map-timeline-tray">
+              <span class="tray-label">Scrub Timeline:</span>
+              <div class="timeline-buttons-wrap">
+                <button class="timeline-step-btn active" data-time="T0" onclick="setRouteTimeline('T0')">NOW</button>
+                <button class="timeline-step-btn" data-time="T4" onclick="setRouteTimeline('T4')">+4h</button>
+                <button class="timeline-step-btn" data-time="T8" onclick="setRouteTimeline('T8')">+8h</button>
+                <button class="timeline-step-btn" data-time="T10" onclick="setRouteTimeline('T10')">+10h (R1
+                  Closes)</button>
+                <button class="timeline-step-btn" data-time="T12" onclick="setRouteTimeline('T12')">+12h</button>
+                <button class="timeline-step-btn" data-time="T18" onclick="setRouteTimeline('T18')">+18h (Window
+                  End)</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Response Priorities Panel (Right) -->
+          <div class="priorities-panel-card">
+            <div class="priorities-header">
+              <div class="priorities-title">
+                <h3>Priority Actions</h3>
+                <p>Ordered by model urgency • ACT TODAY</p>
+              </div>
+              <div class="badge-round-red">4</div>
+            </div>
+
+            <div class="priorities-list-wrap" id="priorities-list-wrap">
+              <!-- Dynamically populated via app.js -->
+            </div>
+
+            <a class="view-all-link" href="#" onclick="switchView('habitations')">
+              View All 8 Habitations with Census Data →
+            </a>
+          </div>
+
+        </section>
+
+        <!-- ==================================================================
+             BOTTOM ROW: 3 CARDS (Shelters, Scenario Snapshot, USP Signals)
+             ================================================================== -->
+        <section class="bottom-cards-grid">
+
+          <!-- Card 1: Shelter Readiness -->
+          <div class="bottom-card">
+            <div>
+              <div class="bottom-card-header">
+                <div>
+                  <h3>Shelter Readiness</h3>
+                  <p>Operational Capacity = min(Shelter, Water, Sanitation, Healthcare, Food, Access)</p>
+                </div>
+                <span class="card-header-icon">🏢</span>
+              </div>
+
+              <div class="shelter-rows-list" id="shelter-rows-list">
+                <!-- Dynamically populated via app.js -->
+              </div>
+
+              <div style="margin-top:12px; text-align:right;">
+                <button class="btn-sm btn-secondary-white" onclick="switchView('safe-sites')">View All 5 Safe Sites
+                  →</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Scenario Snapshot -->
+          <div class="bottom-card">
+            <div>
+              <div class="bottom-card-header">
+                <div>
+                  <h3>Scenario Snapshot</h3>
+                  <p>Current Planning Assumptions & River Telemetry</p>
+                </div>
+                <span class="card-header-icon">⚙️</span>
+              </div>
+
+              <div class="snapshot-rows-list" id="snapshot-rows-list">
+                <!-- Dynamically populated via app.js -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: From Signals to Safer Decisions -->
+          <div class="bottom-card">
+            <div class="signals-card-content">
+              <div class="signals-icon-shield">🛡️</div>
+              <div class="signals-title-text">
+                From Signals to Safer Decisions.
+              </div>
+              <div class="signals-lead-p">
+                "We don't just identify where the risk is — we help decide who should move, where they should go, when
+                they should move, and whether they can reach safety in time."
+              </div>
+
+              <ul class="signals-checklist">
+                <li>
+                  <span class="check-icon">✓</span>
+                  <span><strong>Explainable Risk Factors:</strong> No black-box AI scores.</span>
+                </li>
+                <li>
+                  <span class="check-icon">✓</span>
+                  <span><strong>Multi-Site Allocation:</strong> Splits population when one site fills.</span>
+                </li>
+                <li>
+                  <span class="check-icon">✓</span>
+                  <span><strong>Time-Feasible Routing:</strong> Chooses R2 over shorter R1.</span>
+                </li>
+                <li>
+                  <span class="check-icon">✓</span>
+                  <span><strong>Failure-Ready:</strong> Emergency helicopter assessment for blocked roads.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+
+      <!-- ==================================================================
+           VIEW 2: HABITATIONS INTELLIGENCE
+           ================================================================== -->
+      <div id="view-habitations" class="view-panel" style="display:none;">
+        <div class="view-header-row">
+          <div>
+            <h2 style="margin:0;">Habitation Intelligence & Census 2011 Baseline</h2>
+            <p style="font-size:12px; color:#64748b; margin:2px 0 0 0;">
+              Population baseline: Census of India 2011 — Primary Census Abstract (Demo-adjusted planning values)
+            </p>
+          </div>
+          <div>
+            <button class="btn-primary-blue" onclick="openGeneratePlanModal(APP_STATE.activeVillageId)">
+              Generate Plan for Selected Village →
+            </button>
+          </div>
+        </div>
+
+        <div class="habitations-layout-grid" style="margin-top:16px;">
+          <!-- Left Table (Selectable rows) -->
+          <div class="card-white" style="padding:16px;">
+            <table class="table-clean" style="width:100%;">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Habitation Name</th>
+                  <th>Total Pop</th>
+                  <th>Priority Pop</th>
+                  <th>Risk Score</th>
+                  <th>Window</th>
+                  <th>Required</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="habitations-tbody">
+                <!-- Populated via app.js -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Right Detail Drawer -->
+          <div class="card-white" id="habitation-detail-drawer" style="padding:16px;">
+            <!-- Populated via app.js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================================================================
+           VIEW 3: RED ZONE ALERTS
+           ================================================================== -->
+      <div id="view-red-zones" class="view-panel" style="display:none;">
+        <div class="view-header-row">
+          <div>
+            <h2 style="margin:0;">Hazard-Based Red Zone Mapping & Telemetry</h2>
+            <p style="font-size:12px; color:#64748b; margin:2px 0 0 0;">
+              Multi-Hazard Inundation Buffers & Slope Saturation Monitoring (Chamoli Basin)
+            </p>
+          </div>
+          <div>
+            <span class="badge-status badge-red">Active Hazard: Flash Flood + Scree Slide</span>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:2fr 1fr; gap:16px; margin-top:16px;">
+          <div class="card-white" style="padding:16px;">
+            <h3 style="margin-top:0;">Identified Red Zones</h3>
+            <div style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
+              <div class="alert-severe-box">
+                <strong>Red Zone 1: Alaknanda River Terraces (Chainage km 12 to 24)</strong>
+                <p style="font-size:12px; margin:4px 0;">Impacts: Village A (Pipal Terraces) and Helang Bypass. River
+                  level +2.1m above warning stage.</p>
+                <div style="font-size:11px; color:#991b1b;">Directive: Mandatory evacuation of lower river terraces
+                  within 18h window.</div>
+              </div>
+              <div class="alert-severe-box" style="background:#fffbeb; border-color:#fef3c7; color:#92400e;">
+                <strong style="color:#b45309;">Orange Zone 2: Rishi Ganga Confluence Terraces</strong>
+                <p style="font-size:12px; margin:4px 0;">Impacts: Village B (Rishi Bend). Debris damming risk along
+                  narrow gorge section.</p>
+                <div style="font-size:11px; color:#b45309;">Directive: Standby relocation alert issued. Primary route R4
+                  restricted.</div>
+              </div>
+              <div class="alert-severe-box" style="background:#f0fdf4; border-color:#dcfce7; color:#166534;">
+                <strong style="color:#15803d;">Green Zone 3: Upper Gopeshwar Ridge</strong>
+                <p style="font-size:12px; margin:4px 0;">Location of Safe Sites A and B. High elevation (1,550m ASL),
+                  bedrock foundation, safe from river surge.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-white" style="padding:16px;">
+            <h3 style="margin-top:0;">River Gauge Telemetry</h3>
+            <div class="snapshot-row"><span class="snap-label">Station</span><span
+                class="snap-val font-semibold">Marwari Gauge</span></div>
+            <div class="snapshot-row"><span class="snap-label">Current Stage</span><span
+                class="snap-val text-red font-semibold">1,348.6 m (+2.1m)</span></div>
+            <div class="snapshot-row"><span class="snap-label">Warning Level</span><span class="snap-val">1,346.5
+                m</span></div>
+            <div class="snapshot-row"><span class="snap-label">Danger Level</span><span class="snap-val">1,350.0
+                m</span></div>
+            <div class="snapshot-row"><span class="snap-label">Slope Saturation (GSI)</span><span
+                class="snap-val text-red font-semibold">91% (CRITICAL)</span></div>
+
+            <div style="margin-top:16px;">
+              <button class="btn-primary-blue" style="width:100%;" onclick="openGeneratePlanModal('VIL-01')">
+                Act on Red Zone Directive →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================================================================
+           VIEW 4: SAFE SITES & CARRYING CAPACITY
+           ================================================================== -->
+      <div id="view-safe-sites" class="view-panel" style="display:none;">
+        <div id="safe-sites-view-container"></div>
+      </div>
+
+      <!-- VIEW: PERMANENT RELOCATION (repeat-flood habitations -> permanent safe sites) -->
+      <div id="view-permanent-relocation" class="view-panel" style="display:none;">
+        <div id="permanent-relocation-container"></div>
+      </div>
+
+      <!-- ==================================================================
+           VIEW 5: ROUTES & NAVIGATION
+           ================================================================== -->
+      <div id="view-routes" class="view-panel" style="display:none;">
+        <div id="routes-view-container"></div>
+      </div>
+
+      <!-- ==================================================================
+           NEW VIEW: RAPID AERIAL VERIFICATION (ADD-ON MODULE)
+           ================================================================== -->
+      <div id="view-aerial-verification" class="view-panel" style="display:none;">
+        <div id="aerial-verification-container"></div>
+      </div>
+
+      <!-- ==================================================================
+           VIEW: NDRF RESPONSE DASHBOARD (Quick Response Team / QRT)
+           ================================================================== -->
+      <div id="view-ndrf" class="view-panel" style="display:none;">
+        <div id="ndrf-view-container"></div>
+      </div>
+
+      <!-- ==================================================================
+           VIEW 6: SCENARIO LAB (What-If Simulator)
+           ================================================================== -->
+      <div id="view-scenario-lab" class="view-panel" style="display:none;">
+        <div class="view-header-row">
+          <div>
+            <h2 style="margin:0;">Scenario Lab: What-If Failure Simulator</h2>
+            <p style="font-size:12px; color:#64748b; margin:2px 0 0 0;">
+              Interactively alter hazard severity, road closures, and shelter availability to stress-test relocation
+              decisions.
+            </p>
+          </div>
+          <div>
+            <button class="btn-secondary-white" onclick="handleScenarioChange('baseline')">Reset to Baseline</button>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px;">
+          <!-- Left: Preconfigured Scenarios -->
+          <div class="card-white" style="padding:16px;">
+            <h3 style="margin-top:0;">Test Preconfigured Failure Scenarios</h3>
+            <div class="scenario-buttons-grid" style="display:flex; flex-direction:column; gap:10px; margin-top:12px;">
+              <button class="btn-scenario-opt" onclick="handleScenarioChange('heavy-rain')">
+                <strong>⛈️ Heavy Rainfall Surge (Cloudburst)</strong>
+                <small>Rainfall 140mm, river gauge +2.1m, Route R1 at risk. (Default Demo)</small>
+              </button>
+              <button class="btn-scenario-opt" onclick="handleScenarioChange('r1-blocked')">
+                <strong>🚧 Route R1 Blocked by Scree Slide</strong>
+                <small>Simulates 400m³ landslide at Helang gorge. System re-routes all traffic to Route R2.</small>
+              </button>
+              <button class="btn-scenario-opt" onclick="handleScenarioChange('r2-blocked')">
+                <strong>⚠️ Route R2 Blocked (Plan B Activated)</strong>
+                <small>Forces fallback to Plan B (Route R3 South Hill Corridor to Pipalkoti Site C).</small>
+              </button>
+              <button class="btn-scenario-opt" onclick="handleScenarioChange('site-a-unavailable')">
+                <strong>🌊 Safe Site A Flooded / Unavailable</strong>
+                <small>System detects capacity deficit and searches remaining sites (Site C + Site B).</small>
+              </button>
+              <button class="btn-scenario-opt" onclick="handleScenarioChange('capacity-reduced')">
+                <strong>💧 Site B Water Pipeline Rupture</strong>
+                <small>Reduces Site B operational capacity to 400. Explains exact bottleneck.</small>
+              </button>
+              <button class="btn-scenario-opt danger" onclick="handleScenarioChange('all-roads-blocked')">
+                <strong>🚨 ALL Ground Roads Blocked</strong>
+                <small>Triggers CRITICAL ACCESS FAILURE → Activates Emergency Aerial Evacuation Assessment!</small>
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Interactive Sliders -->
+          <div class="card-white" style="padding:16px;">
+            <h3 style="margin-top:0;">Interactive Relocation Window Slider</h3>
+            <p style="font-size:12px; color:#64748b;">
+              Move the slider to simulate accelerating storm fronts. If available window drops below required transit
+              time (11h), the system flags INSUFFICIENT RELOCATION WINDOW:
+            </p>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:16px; border-radius:8px; margin:16px 0;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <strong>Available Relocation Window:</strong>
+                <span class="badge-status badge-blue" id="slider-window-val" style="font-size:14px;">18h</span>
+              </div>
+              <input type="range" min="6" max="24" step="2" value="18" class="range-slider" style="width:100%;"
+                oninput="handleWindowSlider(this.value)">
+              <div style="display:flex; justify-content:space-between; font-size:11px; color:#64748b; margin-top:4px;">
+                <span>6h (Critical)</span>
+                <span>11h (Equal to Required)</span>
+                <span>18h (Current)</span>
+                <span>24h (Normal)</span>
+              </div>
+            </div>
+
+            <div
+              style="background:#fffbeb; border:1px solid #fef3c7; padding:12px; border-radius:6px; font-size:12px; color:#92400e;">
+              💡 <strong>Explainable Logic:</strong><br>
+              <code>Effective Window = min(Hazard Window, Road Availability, Site Readiness)</code><br>
+              <code>Safety Buffer = Effective Window - Required Time (11h)</code>
+            </div>
+
+            <div style="margin-top:16px;">
+              <button class="btn-primary-blue" style="width:100%;" onclick="openGeneratePlanModal('VIL-01')">
+                View Recomputed Relocation Plan →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================================================================
+           VIEW 7: AUTHORITY DIRECTIVES & ALERTS
+           ================================================================== -->
+      <div id="view-alerts" class="view-panel" style="display:none;">
+        <div id="alerts-view-container"></div>
+      </div>
+
+      <!-- ==================================================================
+           VIEW 8: LIVE RELOCATION STATUS
+           ================================================================== -->
+      <div id="view-status" class="view-panel" style="display:none;">
+        <div id="status-view-container"></div>
+      </div>
+
+      <!-- ==================================================================
+           VIEW 9: EMERGENCY ACCESS & HELICOPTER ASSESSMENT
+           ================================================================== -->
+      <div id="view-emergency-access" class="view-panel" style="display:none;">
+        <div id="emergency-access-container"></div>
+      </div>
+
+      <!-- ==================================================================
+           VIEW 10: RAPID DRONE RECON
+           ================================================================== -->
+      <div id="view-drone" class="view-panel" style="display:none;">
+        <div id="drone-view-container"></div>
+      </div>
+
+      <!-- ==================================================================
+           VIEW 11: DATA & METHODOLOGY
+           ================================================================== -->
+      <div id="view-methodology" class="view-panel" style="display:none;">
+        <div class="view-header-row">
+          <div>
+            <h2 style="margin:0;">Data Sources, Scientific Methodology & Limitations</h2>
+            <p style="font-size:12px; color:#64748b; margin:2px 0 0 0;">
+              Transparent Scientific Foundation for Smart India Hackathon 2026 Evaluation
+            </p>
+          </div>
+        </div>
+
+        <div class="methodology-cards-grid" style="margin-top:16px;">
+
+          <div class="methodology-card">
+            <h3>👥 1. Population & Demographics Baseline</h3>
+            <p><strong>Official Baseline:</strong> Census of India 2011 — Primary Census Abstract (Chamoli District).
+            </p>
+            <p><strong>Demo Adjustment:</strong> Baseline figures are adjusted for planning purposes to reflect
+              estimated 2026 habitation growth and temporal daytime tourist/pilgrim load variations along the Badrinath
+              highway corridor.</p>
+            <div class="methodology-badge">Official Baseline + Demo Adjusted</div>
+          </div>
+
+          <div class="methodology-card">
+            <h3>🌊 2. Hazard & Hydro-Meteorological Modelling</h3>
+            <p><strong>Hazard Layers:</strong> Multi-hazard overlay of landslide susceptibility (GSI National Landslide
+              Susceptibility Mapping) and river stage discharge curves (CWC Alaknanda at Marwari).</p>
+            <p><strong>Simulated Scenario:</strong> Rainfall (140mm/24h) and river surge (+2.1m) are simulated scenario
+              parameters for prototype demonstration.</p>
+            <div class="methodology-badge">Simulated Scenario</div>
+          </div>
+
+          <div class="methodology-card">
+            <h3>🏢 3. Operational Carrying Capacity Formula</h3>
+            <p>Carrying capacity is NOT defined as mere plinth area. It is calculated deterministically:</p>
+            <pre class="code-block-clean">Operational Capacity = minimum(
+  Usable Shelter Plinth,
+  Water Supply (person-days),
+  Sanitation Fixtures,
+  Healthcare Buffer,
+  Food Rations,
+  Road Access Capacity
+)</pre>
+            <p>The system explicitly displays which critical resource is constraining capacity (e.g. Water at Site B).
+            </p>
+            <div class="methodology-badge">Explainable Algorithmic Model</div>
+          </div>
+
+          <div class="methodology-card">
+            <h3>⏱️ 4. Effective Relocation Window & Time-Feasibility</h3>
+            <p>The core USP calculates the Last Safe Relocation Window:</p>
+            <pre class="code-block-clean">Effective Window = minimum(
+  Hazard Inundation Window,
+  Road Passability Closure Window,
+  Safe Site Readiness Window
+)
+Status = (Effective Window >= Required Transit Time) 
+         ? "SAFE IN TIME" : "INSUFFICIENT WINDOW"</pre>
+            <p>Route R2 is chosen over shorter R1 because R1 closes at 10h before 11h relocation completes.</p>
+            <div class="methodology-badge">Core Novel Algorithm</div>
+          </div>
+
+          <div class="methodology-card">
+            <h3>📡 5. Communication Architecture & Alert Gateways</h3>
+            <pre class="code-block-clean" style="text-align:center; font-family:monospace; line-height:1.4;">
+SANKATMOCHAN
+       ↓
+Authorized Alert Gateway
+       ↓
+Government Alert Infrastructure
+       ↓
+NDRF / Response Authorities
+       ↓
+Residents</pre>
+            <p style="margin-top:8px;"><strong>Prototype Mode:</strong> <code>DEMO_ALERT_PROVIDER=true</code> (Simulated
+              Cell Broadcast, SMS, and App notification).</p>
+            <p><strong>Production Deployment:</strong> Requires authorized integration with SACHET (NDMA), Common
+              Alerting Protocol (CAP-v1.2), and authorized telecom Cell Broadcast Services (CBS).</p>
+            <p style="font-size:11px; color:#64748b; font-style:italic;">* Never claim direct production government
+              integration unless actually authorized and connected.</p>
+            <div class="methodology-badge">Government Alert Gateway Architecture</div>
+          </div>
+
+          <div class="methodology-card">
+            <h3>⚠️ 6. Prototype Limitations & Deployment Roadmap</h3>
+            <p><strong>Decision Support Only:</strong> This prototype provides decision support. Final operational
+              decisions remain with the District Magistrate, SDRF, and NDRF.</p>
+            <p><strong>Field Verification:</strong> Production rollout requires live IMD Doppler Radar feeds, real-time
+              CWC IoT telemetry, and local PWD road sensor calibration.</p>
+            <div class="methodology-badge">Hackathon Demonstration Prototype</div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- ====================================================================
+       MASTER CONTAINER: RESIDENT DASHBOARD SHELL
+       ==================================================================== -->
+  <div id="resident-shell" style="display:none; min-height:100vh; background:#f1f5f9; padding:20px 10px;">
+    <div id="resident-view-container"></div>
+  </div>
+
+  <!-- ====================================================================
+       INTERACTIVE MODALS
+       ==================================================================== -->
+
+  <!-- Modal 1: Relocation Plan Generated & Visualizer (10-Step Mission) -->
+  <div class="modal-overlay" id="modal-relocation-plan">
+    <div class="modal-card-lg">
+      <div class="modal-header-clean">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:18px;">📋</span>
+          <h3 style="margin:0;">Generated Relocation Mission & Capacity Allocation</h3>
+        </div>
+        <button class="btn-close-clean" onclick="closeAllModals()">&times;</button>
+      </div>
+      <div class="modal-body-clean" id="modal-plan-content">
+        <!-- Dynamically populated via app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Modify Relocation Plan -->
+  <div class="modal-overlay" id="modal-modify-plan">
+    <div class="modal-card">
+      <div class="modal-header-clean">
+        <h3>Modify Relocation Parameters</h3>
+        <button class="btn-close-clean" onclick="closeAllModals()">&times;</button>
+      </div>
+      <div class="modal-body-clean" id="modal-modify-content">
+        <!-- Dynamically populated via app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Navigation & Turn-by-Turn GPS Simulation -->
+  <div class="modal-overlay" id="modal-navigation">
+    <div class="modal-card">
+      <div class="modal-header-clean">
+        <h3>Turn-by-Turn Safe Navigation</h3>
+        <button class="btn-close-clean" onclick="closeAllModals()">&times;</button>
+      </div>
+      <div class="modal-body-clean" id="modal-nav-content">
+        <!-- Dynamically populated via app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Generic Clean Info Modal (Safe Site / Instructions / SOS) -->
+  <div class="modal-overlay" id="modal-generic">
+    <div class="modal-card">
+      <div class="modal-header-clean">
+        <h3 id="modal-generic-title">Information</h3>
+        <button class="btn-close-clean" onclick="closeAllModals()">&times;</button>
+      </div>
+      <div class="modal-body-clean" id="modal-generic-content">
+        <!-- Dynamically populated via app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 5: Demo Authentication & 3-Role Login -->
+  <div class="modal-overlay" id="modal-login">
+    <div class="modal-card-lg">
+      <div class="modal-header-clean">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:18px;">🔑</span>
+          <h3 style="margin:0;">Select Role to Experience SANKATMOCHAN</h3>
+        </div>
+        <button class="btn-close-clean" onclick="closeAllModals()">&times;</button>
+      </div>
+      <div class="modal-body-clean">
+        <div class="alert-info-pill"
+          style="margin-bottom:14px; background:#eff6ff; border-color:#bfdbfe; color:#1e40af;">
+          ℹ️ <strong>DEMO ENVIRONMENT — NO REAL PERSONAL DATA.</strong> Select any of the 3 operational roles:
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px;">
+
+          <!-- Card 1: DISTRICT AUTHORITY / DM -->
+          <div
+            style="border:1px solid #cbd5e1; border-radius:8px; padding:14px; background:#f8fafc; display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+              <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+                <span style="font-size:18px;">🛡️</span>
+                <h4 style="margin:0; color:#0f172a; font-size:13px;">1. DISTRICT AUTHORITY / DM</h4>
+              </div>
+              <div style="font-size:11px; color:#64748b; margin-bottom:12px; line-height:1.4;">
+                Full command center: Red zone monitoring, capacity scoring, route allocation, public alerts sign-off.
+                <div
+                  style="background:#ffffff; border:1px solid #e2e8f0; border-radius:4px; padding:6px; margin-top:6px;">
+                  Username: <code>authority</code><br>
+                  Password: <code>demo123</code>
+                </div>
+              </div>
+            </div>
+            <button class="btn-primary-blue" style="width:100%; font-size:11px;"
+              onclick="closeAllModals(); switchRole('authority');">
+              Login as District Authority
+            </button>
+          </div>
+
+          <!-- Card 2: NDRF / RESPONSE TEAM -->
+          <div
+            style="border:1px solid #fecaca; border-radius:8px; padding:14px; background:#fff5f5; display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+              <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+                <span style="font-size:18px;">🚨</span>
+                <h4 style="margin:0; color:#991b1b; font-size:13px;">2. NDRF / RESPONSE TEAM</h4>
+              </div>
+              <div style="font-size:11px; color:#7f1d1d; margin-bottom:12px; line-height:1.4;">
+                Actionable rescue dashboard: Active ground/aerial alerts, blocked road assessment, animal assistance.
+                <div
+                  style="background:#ffffff; border:1px solid #fecaca; border-radius:4px; padding:6px; margin-top:6px;">
+                  Username: <code>ndrf</code><br>
+                  Password: <code>ndrf123</code>
+                </div>
+              </div>
+            </div>
+            <button class="btn-primary-blue"
+              style="width:100%; font-size:11px; background:#dc2626; border-color:#b91c1c;"
+              onclick="closeAllModals(); switchRole('ndrf');">
+              Login as NDRF QRT
+            </button>
+          </div>
+
+          <!-- Card 3: RESIDENT -->
+          <div
+            style="border:1px solid #cbd5e1; border-radius:8px; padding:14px; background:#f8fafc; display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+              <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+                <span style="font-size:18px;">📱</span>
+                <h4 style="margin:0; color:#0f172a; font-size:13px;">3. RESIDENT</h4>
+              </div>
+              <div style="font-size:11px; color:#64748b; margin-bottom:12px; line-height:1.4;">
+                Clean mobile emergency screen: Simple evacuation alert, assigned safe site, designated route, SOS.
+                <div
+                  style="background:#ffffff; border:1px solid #e2e8f0; border-radius:4px; padding:6px; margin-top:6px;">
+                  Mobile: <code>9999999999</code><br>
+                  OTP: <code>123456</code>
+                </div>
+              </div>
+            </div>
+            <button class="btn-secondary-white" style="width:100%; font-size:11px; font-weight:700;"
+              onclick="closeAllModals(); switchRole('resident');">
+              Login as Resident
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: SEND ALERT (Authority Broadcast Gateway) -->
+  <div class="modal-overlay" id="modal-send-alert">
+    <div class="modal-card">
+      <div class="modal-header-clean">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:18px;">📢</span>
+          <h3 style="margin:0;">Disaster Alert Gateway — Dispatch Authority Directives</h3>
+        </div>
+        <button class="btn-close-clean" onclick="closeAllModals()">&times;</button>
+      </div>
+      <div class="modal-body-clean">
+        <div class="alert-info-pill" style="margin-bottom:14px; font-size:11px;">
+          Select target recipient channel. Dispatches via <strong>Government Alert Gateway (DemoAlertProvider)</strong>:
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <!-- Option 1: ALERT NDRF -->
+          <div style="border:2px solid #dc2626; border-radius:8px; padding:14px; background:#fef2f2;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <strong style="color:#991b1b; font-size:13px;">🚨 ALERT NDRF</strong>
+              <span class="badge-status badge-red">CRITICAL</span>
+            </div>
+            <p style="font-size:11px; color:#7f1d1d; margin:0 0 10px 0;">
+              <strong>NDRF RESPONSE ALERT:</strong><br>
+              Target: Village A (Sector 4)<br>
+              Potential persons: 18<br>
+              Road R2: Blocked by debris<br>
+              Location: Old School Terrace
+            </p>
+            <button class="btn-primary-blue"
+              style="width:100%; background:#dc2626; border-color:#b91c1c; font-size:11px;"
+              onclick="triggerNdrfAlertDispatch()">
+              Dispatch NDRF Response Alert →
+            </button>
+          </div>
+
+          <!-- Option 2: PUBLIC ALERT -->
+          <div style="border:2px solid #2563eb; border-radius:8px; padding:14px; background:#eff6ff;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <strong style="color:#1e40af; font-size:13px;">📢 PUBLIC ALERT</strong>
+              <span class="badge-status badge-blue">EVACUATION</span>
+            </div>
+            <p style="font-size:11px; color:#1e3a8a; margin:0 0 10px 0;">
+              <strong>EMERGENCY EVACUATION ALERT:</strong><br>
+              Village A • Hazard: Flash Flood + Landslide<br>
+              Move to: Safe Site A / B<br>
+              Recommended Route: R2 (Avoid R1)<br>
+              Follow local authority instructions.
+            </p>
+            <button class="btn-primary-blue" style="width:100%; font-size:11px;" onclick="triggerPublicAlertDispatch()">
+              Dispatch Public Evacuation Alert →
+            </button>
+          </div>
+        </div>
+
+        <!-- Government Cell Broadcast Integration Notice -->
+        <div
+          style="margin-top:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:10px; font-size:11px; color:#475569;">
+          <strong>Government Alert Integration:</strong> <code>DEMO_ALERT_PROVIDER=true</code><br>
+          <div style="display:flex; gap:12px; margin-top:4px;">
+            <span>✓ Cell Broadcast — DEMO</span>
+            <span>✓ SMS — DEMO</span>
+            <span>✓ App Notification — DEMO</span>
+          </div>
+          <small style="color:#64748b; display:block; margin-top:4px;">
+            Simulated government alert integration. Production deployment requires authorized government integration
+            (SACHET/CAP/CBS).
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: NETWORK STATUS SIMULATION & OFFLINE RESILIENCE -->
+  <div class="modal-overlay" id="modal-network-status">
+    <div class="modal-card">
+      <div class="modal-header-clean">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:18px;">📡</span>
+          <h3 style="margin:0;">Network Status Simulation</h3>
+        </div>
+        <button class="btn-close-clean" onclick="closeAllModals()">&times;</button>
+      </div>
+      <div class="modal-body-clean">
+        <p style="font-size:12px; color:#475569; margin:0 0 12px 0;">
+          Test how SANKATMOCHAN handles degraded and offline mountain connectivity environments:
+        </p>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <!-- NORMAL -->
+          <div style="border:1px solid #cbd5e1; border-radius:6px; padding:10px; cursor:pointer;"
+            onclick="setNetworkMode('NORMAL')">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong style="color:#15803d; font-size:12px;">🟢 NORMAL NETWORK</strong>
+              <span class="badge-status badge-green">ACTIVE</span>
+            </div>
+            <div style="font-size:11px; color:#64748b; margin-top:2px;">
+              Cell Broadcast, SMS, and App notification gateways fully online.
+            </div>
+          </div>
+
+          <!-- DEGRADED -->
+          <div style="border:1px solid #cbd5e1; border-radius:6px; padding:10px; cursor:pointer;"
+            onclick="setNetworkMode('DEGRADED')">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong style="color:#b45309; font-size:12px;">🟡 DEGRADED CONNECTIVITY</strong>
+              <span class="badge-status badge-orange">MARGINAL</span>
+            </div>
+            <div style="font-size:11px; color:#64748b; margin-top:2px;">
+              Cell Broadcast active; SMS and App notification retry queues active.
+            </div>
+          </div>
+
+          <!-- CELLULAR OUTAGE -->
+          <div style="border:1px solid #fecaca; border-radius:6px; padding:10px; background:#fff5f5; cursor:pointer;"
+            onclick="setNetworkMode('CELLULAR_OUTAGE')">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong style="color:#b91c1c; font-size:12px;">🔴 CELLULAR OUTAGE</strong>
+              <span class="badge-status badge-red">OFFLINE</span>
+            </div>
+            <div style="font-size:11px; color:#7f1d1d; margin-top:2px;">
+              Cellular network unavailable. Digital alerts queued. Fallback communication required: Radio / Satellite /
+              Field patrols.
+            </div>
+          </div>
+        </div>
+
+        <!-- Offline Cache Box -->
+        <div id="offline-cache-box"
+          style="margin-top:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:10px; font-size:11px; color:#334155;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <strong>OFFLINE LOCAL CACHE (IndexedDB / RAM)</strong>
+            <span style="color:#64748b;">Last synced: 10:42 AM</span>
+          </div>
+          <div>Available offline: 8 Villages, 3 Rescue Tasks, 5 Safe Sites, 5 Routes, Emergency Instructions.</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <span style="color:#b45309;" id="offline-queued-count">Queued offline actions: 0</span>
+            <button class="btn-sm btn-secondary-white" onclick="syncOfflineCache()">SYNC NOW 🔄</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 6: Create Drone Verification Mission -->
+  <div class="modal-overlay" id="modal-create-mission">
+    <div class="modal-card">
+      <div class="modal-header-clean">
+        <h3>Configure Drone Verification Mission</h3>
+        <button class="btn-close-clean" onclick="closeAllModals()">&times;</button>
+      </div>
+      <div class="modal-body-clean">
+        <div style="font-size:12px; color:#475569; margin-bottom:12px;">
+          Deploy automated quad-rotor UAV reconnaissance to verify ground population, livestock herds, and road
+          passability.
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div>
+            <label style="font-size:11px; font-weight:700; color:#0f172a; display:block; margin-bottom:4px;">Target
+              Village</label>
+            <select id="mission-target-village" class="input-clean"
+              style="width:100%; padding:7px; border:1px solid #cbd5e1; border-radius:6px; font-size:12px;">
+              <option value="VIL-01" selected>Village A (Pipal Terraces) — Priority #1</option>
+              <option value="VIL-02">Village B (Rishi Bend) — Priority #2</option>
+              <option value="VIL-03">Village C (Dhauli Terraces) — Priority #3</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:700; color:#0f172a; display:block; margin-bottom:4px;">Mission
+              Type</label>
+            <select id="mission-type-select" class="input-clean"
+              style="width:100%; padding:7px; border:1px solid #cbd5e1; border-radius:6px; font-size:12px;">
+              <option value="pop" selected>Population Verification</option>
+              <option value="livestock">Livestock Verification</option>
+              <option value="isolated">Isolated Habitation Detection</option>
+              <option value="road">Road Corridor Verification</option>
+              <option value="shelter">Shelter Site Verification</option>
+              <option value="full">Full Situation Assessment</option>
+            </select>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div>
+              <label
+                style="font-size:11px; font-weight:700; color:#0f172a; display:block; margin-bottom:4px;">Priority</label>
+              <select id="mission-priority-select" class="input-clean"
+                style="width:100%; padding:7px; border:1px solid #cbd5e1; border-radius:6px; font-size:12px;">
+                <option value="CRITICAL" selected>CRITICAL</option>
+                <option value="HIGH">HIGH</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="LOW">LOW</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:700; color:#0f172a; display:block; margin-bottom:4px;">Sensor
+                Mode</label>
+              <select id="mission-sensor-select" class="input-clean"
+                style="width:100%; padding:7px; border:1px solid #cbd5e1; border-radius:6px; font-size:12px;">
+                <option value="COMBINED" selected>RGB + Thermal (FLIR)</option>
+                <option value="THERMAL">Thermal Heat Signature Only</option>
+                <option value="RGB">RGB Optical (4K 60fps)</option>
+              </select>
+            </div>
+          </div>
+          <div
+            style="background:#f8fafc; border:1px solid #e2e8f0; padding:8px; border-radius:6px; font-size:11px; color:#64748b;">
+            <span>Area: Predefined cadastral boundary polygon (Chamoli Sector 4, 1.4 km²)</span>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px;">
+          <button class="btn-secondary-white" onclick="closeAllModals()">Cancel</button>
+          <button class="btn-primary-blue" onclick="startConfiguredDroneMission()">
+            🛸 Start Demo Mission
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 7: Animal Evacuation Plan -->
+  <div class="modal-overlay" id="modal-animal-plan">
+    <div class="modal-card">
+      <div class="modal-header-clean">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span>🐄</span>
+          <h3 style="margin:0;">Animal Evacuation Plan (Holding Camp L-02)</h3>
+        </div>
+        <button class="btn-close-clean" onclick="closeAllModals()">&times;</button>
+      </div>
+      <div class="modal-body-clean" id="modal-animal-content">
+        <!-- Dynamically populated via app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 8: Create Rescue Task -->
+  <div class="modal-overlay" id="modal-create-rescue-task">
+    <div class="modal-card">
+      <div class="modal-header-clean">
+        <h3 id="rescue-modal-title">Create Emergency Rescue Task</h3>
+        <button class="btn-close-clean" onclick="closeAllModals()">&times;</button>
+      </div>
+      <div class="modal-body-clean" id="rescue-modal-content">
+        <!-- Dynamically populated via app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet GIS Library -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- SANKATMOCHAN Dataset -->
+  <script src="geo-data.js"></script>
+
+  <!-- Deterministic Relocation & Capacity Engine -->
+  <script src="relocation-engine.js"></script>
+
+  <!-- Application Controller -->
+  <script src="app.js"></script>
+
+  <!-- Permanent Relocation add-on (repeat-flood habitations) -->
+  <script src="permanent-relocation.js"></script>
+
+  <script>
+    function openLoginModal() {
+      document.getElementById('modal-login').classList.add('open');
+    }
+
+    // Map safety: size fix + Leaflet na aaye to message
+    window.addEventListener('load', function () {
+      var el = document.getElementById('gis-map');
+      if (!el) return;
+      if (typeof L === 'undefined') {
+        el.innerHTML = '<div style="height:100%;display:grid;place-items:center;text-align:center;padding:24px;color:#5f7480;font-size:13px">Map load nahi hua.<br>Internet check karo (Leaflet unpkg se aati hai) aur page reload karo.</div>';
+        return;
+      }
+      [300, 1200, 3000].forEach(function (ms) {
+        setTimeout(function () { if (typeof gMap !== 'undefined' && gMap) gMap.invalidateSize(); }, ms);
+      });
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,388 @@
+/* ==========================================================================
+   SANKATMOCHAN — Modern Light Theme (loads AFTER styles.css)
+   Sab kuch light hai, koi dark shade nahi. Purane classes ke naam same hain.
+   ========================================================================== */
+:root {
+  --sidebar-bg: #ffffff;
+  --sidebar-card-bg: #f1f8f6;
+  --sidebar-card-border: #dbe6e3;
+  --sidebar-text: #334e57;
+  --sidebar-text-bright: #12232b;
+  --sidebar-active-bg: #d9f3ee;
+  --sidebar-active-text: #0b6b5e;
+  --sidebar-hover: #eef6f4;
+
+  --bg-main: #f3f8f7;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f6faf9;
+  --border-subtle: #e3ebe9;
+  --border-card: #d5e1de;
+  --text-heading: #12232b;
+  --text-body: #334e57;
+  --text-muted: #5f7480;
+  --text-dim: #7f979f;
+
+  --primary-blue: #0f9d8a;
+  --primary-blue-hover: #0b7f6f;
+  --accent-teal: #0f9d8a;
+  --font-display: 'Bricolage Grotesque', 'Inter', sans-serif;
+
+  --shadow-sm: 0 1px 2px rgba(13, 27, 34, .06);
+  --shadow-card: 0 1px 2px rgba(13, 27, 34, .06), 0 8px 24px -14px rgba(13, 27, 34, .18);
+  --shadow-popup: 0 24px 60px -18px rgba(13, 27, 34, .35);
+  --shadow-glow: 0 0 0 4px rgba(15, 157, 138, .18);
+}
+
+html {
+  scroll-behavior: smooth
+}
+
+body {
+  background: var(--bg-main);
+  color: var(--text-body)
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -.02em;
+  color: var(--text-heading)
+}
+
+:focus-visible {
+  outline: 3px solid rgba(15, 157, 138, .45);
+  outline-offset: 2px
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent
+}
+
+/* ---- top banner ---- */
+.top-simulation-banner {
+  background: linear-gradient(100deg, #d9f3ee 0%, #e4f4fb 55%, #fdf1d8 100%);
+  color: #12313a;
+  border-bottom: 1px solid var(--border-card)
+}
+
+.banner-usp-quote {
+  color: #4a6870
+}
+
+.sim-badge-alert {
+  background: #f7c766;
+  color: #5a3a00;
+  border-radius: 999px;
+  padding: 3px 10px
+}
+
+.btn-demo-glow {
+  background: linear-gradient(135deg, #0f9d8a, #2aa6b8);
+  box-shadow: 0 6px 16px -6px rgba(15, 157, 138, .7);
+  border-radius: 999px;
+  padding: 7px 16px
+}
+
+.btn-demo-glow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -8px rgba(15, 157, 138, .85)
+}
+
+.btn-demo-glow:active {
+  transform: scale(.96)
+}
+
+/* ---- sidebar ---- */
+.sidebar {
+  background: #fff;
+  box-shadow: 2px 0 24px -16px rgba(13, 27, 34, .25)
+}
+
+.nav-link {
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 13px
+}
+
+.nav-link:hover {
+  background: var(--sidebar-hover);
+  color: #0b6b5e;
+  transform: translateX(3px)
+}
+
+.nav-link:active {
+  transform: scale(.98)
+}
+
+.nav-link.active {
+  background: linear-gradient(90deg, #d9f3ee, #eef9f7);
+  color: #0b6b5e
+}
+
+.sidebar-role-card {
+  background: var(--sidebar-card-bg);
+  border: 1px solid var(--sidebar-card-border);
+  border-radius: 14px
+}
+
+/* ---- top bar ---- */
+.top-nav-bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: rgba(255, 255, 255, .88);
+  backdrop-filter: blur(10px);
+  padding: 12px 18px;
+  border: 1px solid var(--border-card);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card)
+}
+
+.badge-role-header {
+  background: #d9f3ee;
+  color: #0b6b5e;
+  border: 1px solid #9fdcd1;
+  border-radius: 999px;
+  padding: 5px 12px
+}
+
+/* ---- buttons ---- */
+.btn-primary-blue {
+  background: linear-gradient(135deg, #0f9d8a, #0b8474);
+  border-radius: 10px;
+  box-shadow: 0 6px 16px -6px rgba(15, 157, 138, .65);
+  transition: transform .15s, box-shadow .2s, filter .2s
+}
+
+.btn-primary-blue:hover {
+  background: linear-gradient(135deg, #12ad98, #0b8474);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -8px rgba(15, 157, 138, .8)
+}
+
+.btn-secondary-white {
+  border-radius: 10px
+}
+
+.btn-secondary-white:hover {
+  background-color: #eef6f4;
+  border-color: #9fdcd1;
+  color: #0b6b5e;
+  transform: translateY(-1px)
+}
+
+.btn-primary-blue:active,
+.btn-secondary-white:active,
+.btn-sm:active,
+.btn-layer-pill:active,
+.timeline-step-btn:active {
+  transform: scale(.96)
+}
+
+.btn-close-clean:hover {
+  color: #e5482d
+}
+
+.btn-icon-action:hover,
+.timeline-step-btn:hover {
+  background: #eef6f4
+}
+
+/* ---- cards ---- */
+.metric-card-white {
+  border-radius: 16px;
+  box-shadow: var(--shadow-card)
+}
+
+.metric-card-white:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 2px 4px rgba(13, 27, 34, .08), 0 18px 36px -14px rgba(13, 27, 34, .28)
+}
+
+.metric-number-big {
+  color: var(--text-heading);
+  font-family: var(--font-display);
+  letter-spacing: -.03em
+}
+
+.stat-box-white strong {
+  color: var(--text-heading)
+}
+
+.stat-sub {
+  color: var(--text-muted)
+}
+
+.map-panel-card,
+.priorities-panel-card,
+.bottom-card,
+.card-white {
+  border-radius: 18px;
+  box-shadow: var(--shadow-card)
+}
+
+/* ---- pipeline strip + priorities ---- */
+.four-stage-overview-strip {
+  border-radius: 16px;
+  box-shadow: var(--shadow-card)
+}
+
+.four-stage-overview-strip:hover {
+  background: #f6faf9;
+  transform: translateY(-2px)
+}
+
+.pipeline-step-node .step-num {
+  background: #e6eeec;
+  color: #4d666e
+}
+
+.priority-item-card {
+  border-radius: 12px
+}
+
+.priority-item-card:hover {
+  background: #eef6f4;
+  border-color: #9fdcd1;
+  transform: translateY(-1px)
+}
+
+.priority-item-card.active {
+  border-color: #0f9d8a;
+  background: #e6f6f3;
+  box-shadow: 0 0 0 3px rgba(15, 157, 138, .16)
+}
+
+.prio-rank-pill {
+  background: #e6eeec;
+  color: #334e57
+}
+
+.prio-risk-bar-container {
+  background: #e6eeec
+}
+
+/* ---- map ---- */
+.map-canvas-wrapper {
+  isolation: isolate;
+  z-index: 0;
+  border-radius: 14px
+}
+
+.leaflet-container {
+  font-family: 'Inter', sans-serif;
+  background: #dfe8e6
+}
+
+.leaflet-popup-content-wrapper {
+  background: #fff !important;
+  color: var(--text-body) !important;
+  border: 1px solid var(--border-card) !important;
+  box-shadow: 0 12px 30px -10px rgba(13, 27, 34, .35) !important;
+  border-radius: 12px !important
+}
+
+.leaflet-popup-tip {
+  background: #fff !important
+}
+
+.map-popup-custom h4 {
+  color: var(--text-heading)
+}
+
+.map-popup-custom p,
+.map-popup-custom div {
+  color: var(--text-body)
+}
+
+.btn-layer-pill {
+  transition: all .18s
+}
+
+.btn-layer-pill:hover {
+  border-color: #0f9d8a
+}
+
+.timeline-step-btn.active {
+  background: #0f9d8a;
+  border-color: #0f9d8a;
+  color: #fff
+}
+
+/* ---- modals / hud / toast ---- */
+.modal-overlay {
+  backdrop-filter: blur(6px)
+}
+
+.modal-card {
+  border-radius: 18px
+}
+
+.btn-close-clean {
+  transition: transform .2s, background .2s
+}
+
+.btn-close-clean:hover {
+  transform: rotate(90deg)
+}
+
+.demo-hud-card {
+  border: 2px solid #0f9d8a;
+  border-radius: 16px
+}
+
+.system-toast-box {
+  background: #fff;
+  color: var(--text-heading);
+  border: 1px solid var(--border-card);
+  border-left: 4px solid #0f9d8a;
+  border-radius: 12px
+}
+
+.stepper-node span {
+  background: #0f9d8a
+}
+
+/* ---- vision pills (aerial controls) ---- */
+.btn-vision-pill {
+  background: #f1f6f5;
+  border: 1px solid var(--border-card);
+  color: #334e57
+}
+
+.btn-vision-pill:hover {
+  border-color: #0f9d8a
+}
+
+.btn-vision-pill.active {
+  background: #0f9d8a;
+  border-color: #0f9d8a;
+  color: #fff;
+  box-shadow: none
+}
+
+/* ---- scroll + responsive ---- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px
+}
+
+::-webkit-scrollbar-thumb {
+  background: #b7cbc7;
+  border-radius: 10px
+}
+
+@media (max-width:1100px) {
+  .banner-usp-quote {
+    display: none
+  }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  * {
+    animation: none !important;
+    transition: none !important
+  }
+}
